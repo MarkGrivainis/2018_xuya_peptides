@@ -1,6 +1,7 @@
 var fs = require('fs');
 var zlib = require('zlib');
 var refseq = '=ACMGRSVTWYHKDBN';
+var cigmap = 'MIDNSHP=X';
 
 function processBGZFHeader(chunk) {
   console.log('-------------------------------')
@@ -80,23 +81,20 @@ function processBGZFBody(chunk) {
         console.log('    nrefid:   ' + buffer.readInt32LE(24)); // 1 byte
         console.log('    npos:   ' + buffer.readInt32LE(28)); // 1 byte
         console.log('    tlen:   ' + buffer.readInt32LE(32)); // 1 byte
-        console.log('    tlen:   ' + buffer.toString('ascii', 36, 36 + buffer.readUInt8(12))); // 1 byte
-        var pos = 36 + buffer.readUInt8(12) - 1;
+        // TODO: add check for null character
+        console.log('    rname:   ' + buffer.toString('ascii', 36, 36 + buffer.readUInt8(12))); // 1 byte
+        var pos = 36 + buffer.readUInt8(12);
         for (var cig = 0; cig < buffer.readUInt16LE(16); cig++) {
-          console.log('    CIGAR:   |' + buffer.readUInt32LE(pos)+'|'); // 1 byte
-          var cigmap = 'MIDNSHP=X'
+
           //012345678
           var tst =  buffer.readUInt32LE(pos);
-          console.log(tst.toString(2));
-          for (var c = 0; c < 9;++c) {
-            var t = tst<<4 | c;
-            var tst = tst<<4;
-            console.log(' cig:  ' + t)
-          }
+          var op = tst & 0xF;
+          var op_len = tst >>> 4;
+          console.log('cig : ' + cigmap[op] + '' + op_len);
           pos += 4;
         }
         var char_seq = ''
-        for (var char = 0; char < (buffer.readInt32LE(20)+1)/2; char++) {
+        for (var char = 0; char < Math.floor((buffer.readInt32LE(20)+1)/2); char++) {
           var num = buffer.readUInt8(pos);
           var a = num >> 4 & 0xF;
           var b = num & 0xF;
@@ -106,8 +104,14 @@ function processBGZFBody(chunk) {
           pos += 1;
         }
         console.log('    seq:    ' + char_seq);
-        console.log('    qual:   |' + buffer.toString('ascii', pos, pos + buffer.readInt32LE(20)+'|')); // 1 byte
-        pos += buffer.readInt32LE(20);
+        console.log('   seq_len: ' + char_seq.length);
+        console.log(pos);
+        qual = ''
+        for (var char = 0; char < buffer.readInt32LE(20); char++) {
+            qual += String.fromCharCode(buffer.readUInt8(pos + char) + 33);
+        }
+        console.log('    qual:   |' + qual + '|');// + buffer.readInt32LE(20)+'|')); // 1 byte
+        pos += buffer.readInt32LE(20)+1;
         while (pos < buffer.readInt32LE(0) + 2) {
           console.log('    tag:   |' + buffer.toString('ascii', pos, pos + 2)+'|'); // 1 byte
           pos += 2;
