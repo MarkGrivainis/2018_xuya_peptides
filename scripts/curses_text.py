@@ -1,11 +1,8 @@
-import sys,os
 import curses
 from Bio import Seq, SeqIO
 
 from view import View
 
-    # if read.reference_length <= 50:
-        # print(read.reference_start - reads_list[read_idx].query_alignment_start, read.query_sequence, read.reference_length, read.cigarstring)
 AA_dict = {
     'Alanine': ('Ala', 'A'),
     'Arginine': ('Arg', 'R'),
@@ -40,18 +37,21 @@ fasta_input_file = '../fasta/Homo_sapiens_L1.L1HS.fa'
 
 l1_seq = None
 
-fasta_sequences = SeqIO.parse(open(fasta_input_file),'fasta')
+fasta_sequences = SeqIO.parse(open(fasta_input_file), 'fasta')
 pep1 = (3392, 'KSPGPDGFIAEFYK')
 for fasta in fasta_sequences:
     l1_seq = Seq.translate(str(fasta.seq[View.ORF2_START:5815]))
     tst_seq = str(fasta.seq[ORF2_START:5815])
 
-bam_input_file = '../test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+bam_input_file = (
+        '../test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
+        'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+        )
 reader = View(bam_input_file, 0, 200)
+
 
 def draw_menu(stdscr):
     k = 0
-    read_idx = 0
     offset = 0
 
     height, width = stdscr.getmaxyx()
@@ -110,8 +110,13 @@ def draw_menu(stdscr):
 
         # AA_from_RNA, AA_from_RNA_seq = update_reads(offset, width)
 
-        # stdscr.addstr(50, 50, str((reads_list[read_idx].reference_start - reads_list[read_idx].query_alignment_start - (ORF2_START + offset*3) - translate_offset)/3 + 1))
-        # stdscr.addstr(51, 50, str(reads_list[read_idx].reference_start - reads_list[read_idx].query_alignment_start))
+        # stdscr.addstr(50, 50,
+        #         str((reads_list[read_idx].reference_start -
+        #             reads_list[read_idx].query_alignment_start -
+        #             (ORF2_START + offset*3) - translate_offset)/3 + 1))
+        # stdscr.addstr(51, 50,
+        #         str(reads_list[read_idx].reference_start -
+        #             reads_list[read_idx].query_alignment_start))
         # stdscr.addstr(52, 50, str(ORF2_START + offset*3))
         # stdscr.addstr(53, 50, str(translate_offset))
         # stdscr.addstr(54, 50, str(reads_list[read_idx].reference_length))
@@ -120,18 +125,20 @@ def draw_menu(stdscr):
         # stdscr.addstr(56, 50, reads_list[read_idx].seq)
         # stdscr.addstr(57, 50, reads_list[read_idx].cigarstring)
 
-        statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {}".format(0, 0)
+        statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {}".format(
+                0, 0)
 
         # Rendering the header
         whstr = "Width: {}, Height: {}".format(width, height)
         stdscr.addstr(0, 0, whstr, curses.color_pair(1))
         offsetstr = "Offset: {}".format(offset)
-        stdscr.addstr(1,0, offsetstr, curses.color_pair(1))
+        stdscr.addstr(1, 0, offsetstr, curses.color_pair(1))
 
         # Render status bar
         stdscr.attron(curses.color_pair(3))
         stdscr.addstr(height-1, 0, statusbarstr)
-        stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
+        stdscr.addstr(height-1,
+                      len(statusbarstr), " " * (width - len(statusbarstr) - 1))
         stdscr.attroff(curses.color_pair(3))
 
         # Turning on attributes for title
@@ -144,64 +151,42 @@ def draw_menu(stdscr):
 
         box1 = stdscr.subwin(len(AA_lookup) + 4, int(width-20), 4, 5)
         box1.box()
-        for idx in range(1,width-21):
+        for idx in range(1, width-21):
             box1.addch(1, idx, l1_seq[idx-1+offset])
-            # box1.addch(AA_lookup[l1_seq[idx-1+offset]], idx, l1_seq[idx-1+offset])
 
         box1.addstr(2, 1, ''.join(AA_from_RNA_seq))
 
         for idx, AA in enumerate(l1_seq[offset: offset + width - 22]):
-            color = 4
-            pep = ''
-            rna = False
-            con = False
             idx_color = {}
             idx_color[AA] = idx_color.get(AA, 4) + 1
             # TODO make sure that there are no duplicates at each position
-            if (pep1[0]-ORF2_START)//3 <= idx+offset <= (pep1[0]-ORF2_START)//3 + len(pep1[1]) - 1 :
+            if (pep1[0]-ORF2_START)//3 <= \
+                idx+offset <= \
+                    (pep1[0]-ORF2_START)//3 + len(pep1[1]) - 1:
                 pep = pep1[1][idx+offset-(pep1[0]-ORF2_START)//3]
                 idx_color[pep] = idx_color.get(pep, 4) + 4
             for con_AA in AA_from_RNA[idx]:
                 idx_color[con_AA] = idx_color.get(con_AA, 4) + 2
-            for k,v in idx_color.items():
+            for k, v in idx_color.items():
                 box1.attron(curses.color_pair(v))
                 box1.addch(AA_lookup[k]+2, idx+1, '■')
                 box1.attroff(curses.color_pair(v))
-
-        # for idx, AAs in enumerate(AA_from_RNA):
-            # plotted_ref = False
-            # for AA in AAs:
-                # if l1_seq[idx+offset] == AA:
-                    # color = 6
-                    # plotted_ref = True
-                # elif (pep1[0]-ORF2_START)//3 <= idx+offset <= (pep1[0]-ORF2_START)//3 + len(pep1[1]) :
-                    # color=7
-                # else:
-                    # color = 5
-                # box1.attron(curses.color_pair(color))
-                # box1.addch(AA_lookup[AA]+2, idx+1, '■')
-                # box1.attroff(curses.color_pair(color))
-            # if not plotted_ref:
-                # box1.attron(curses.color_pair(4))
-                # box1.addch(AA_lookup[l1_seq[idx+offset]]+2, idx+1, ' ')
-                # box1.attroff(curses.color_pair(4))
 
         # Turning off attributes for title
         stdscr.attroff(curses.color_pair(2))
         stdscr.attroff(curses.A_BOLD)
 
-
-        # Refresh the screen
+        #  Refresh the screen
         stdscr.refresh()
 
         # Wait for next input
         k = stdscr.getch()
 
+
 def main():
     # pass
     curses.wrapper(draw_menu)
 
+
 if __name__ == "__main__":
     main()
-
-
