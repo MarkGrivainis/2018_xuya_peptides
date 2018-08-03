@@ -1,5 +1,6 @@
 from Bio.Blast.Applications import NcbitblastnCommandline
 import xml.etree.ElementTree as ET
+import pandas as pd
 
 
 def build_fasta(sequences):
@@ -68,15 +69,28 @@ if __name__ == "__main__":
     lookup_table = (
             '../test_data/tables/'
             'TCGA-BRCA.UUID_Barcode.final_tumor.txt')
+
+    TCGA_PEP_TABLE = (
+            '../test_data/tables/'
+            'all_ORF2_wide.txt'
+            )
+
     bam_line = filter(
-            lambda x: x[0].split('_')[0] == bam_id or True,
+            lambda x: x[0].split('_')[0] == bam_id,
             map(
                 lambda x: x.strip().split('\t'),
                 open(lookup_table, 'r').readlines()
                 )
             )
-    print(bam_id)
-    # print(list(bam_line))
+    tcga_ids = []
     for id in bam_line:
-        print(id[0].split('_')[0], bam_id, id[0].split('_')[0] == bam_id)
+        tcga_ids.append(id[2])
+    print(tcga_ids)
+    id = '-'.join(tcga_ids[0].split('-')[1:3])
+    tcga_pep_positive = pd.read_table(TCGA_PEP_TABLE)
+    # print(tcga_pep_positive)
+    peptides = tcga_pep_positive['breast' + '.' + id].dropna().index
+    print(peptides)
+    for pep in peptides:
+        print(pep)
     # main()
