@@ -1,7 +1,10 @@
 import curses
+
+import pandas as pd
 from Bio import Seq, SeqIO
 
-from view import View
+from my_packages.bam.view import View
+import my_packages.blast.blast_text as pblast
 
 AA_dict = {
     'Alanine': ('Ala', 'A'),
@@ -30,27 +33,64 @@ AA_dict = {
     'undetermined': ('X', 'X')
 }
 
-
 AA_lookup = {x[1]: idx+1 for idx, x in enumerate(AA_dict.values())}
 ORF2_START = View.ORF2_START
-fasta_input_file = '../fasta/Homo_sapiens_L1.L1HS.fa'
+fasta_input_file = './fasta/Homo_sapiens_L1.L1HS.fa'
+
+
+
+
 
 l1_seq = None
 
 fasta_sequences = SeqIO.parse(open(fasta_input_file), 'fasta')
-pep1 = (3392, 'KSPGPDGFIAEFYK')
+
+
 for fasta in fasta_sequences:
     l1_seq = Seq.translate(str(fasta.seq[View.ORF2_START:5815]))
     tst_seq = str(fasta.seq[ORF2_START:5815])
 
 bam_input_file = (
-        '../test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
+        './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
         'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
         )
 reader = View(bam_input_file, 0, 200)
 
 
 def draw_menu(stdscr):
+    bam_input_file = (
+        './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
+        'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+    )
+
+    lookup_table = (
+        './test_data/tables/'
+        'TCGA-BRCA.UUID_Barcode.final_tumor.txt')
+
+    TCGA_PEP_TABLE = (
+        './test_data/tables/'
+        'all_ORF2_wide.txt'
+    )
+    bam_id = bam_input_file.split('/')[-1].split('_')[0]
+
+    bam_line = filter(
+        lambda x: x[0].split('_')[0] == bam_id,
+        map(
+            lambda x: x.strip().split('\t'),
+            open(lookup_table, 'r').readlines()
+        )
+    )
+    tcga_ids = []
+    for id in bam_line:
+        tcga_ids.append(id[2])
+    id = '-'.join(tcga_ids[0].split('-')[1:3])
+    tcga_pep_positive = pd.read_table(TCGA_PEP_TABLE)
+    peptides = tcga_pep_positive['breast' + '.' + id].dropna().index
+    pep_dict = pblast.build_peptide_dict(peptides)
+    blast_xml_tree = pblast.blast_fasta('\n'.join(['>{}\n{}'.format(k, v) for k,v in pep_dict.items()]), fasta_input_file)
+    blast_results = pblast.process_blast_output(blast_xml_tree)
+    blast_full_length = {k: [z for z in v if len(z[1]['query']) == len(pep_dict[k])] for k, v in blast_results.items()}
+
     k = 0
     offset = 0
 
@@ -160,11 +200,13 @@ def draw_menu(stdscr):
             idx_color = {}
             idx_color[AA] = idx_color.get(AA, 4) + 1
             # TODO make sure that there are no duplicates at each position
-            if (pep1[0]-ORF2_START)//3 <= \
-                idx+offset <= \
-                    (pep1[0]-ORF2_START)//3 + len(pep1[1]) - 1:
-                pep = pep1[1][idx+offset-(pep1[0]-ORF2_START)//3]
-                idx_color[pep] = idx_color.get(pep, 4) + 4
+            for match_list in blast_full_length.values():
+                for pep1 in match_list:
+                    if (pep1[0]-ORF2_START)//3 <= \
+                        idx+offset <= \
+                            (pep1[0]-ORF2_START)//3 + len(pep1[1]['query']) - 1:
+                        pep = pep1[1]['query'][idx+offset-(pep1[0]-ORF2_START)//3]
+                        idx_color[pep] = idx_color.get(pep, 4) + 4
             for con_AA in AA_from_RNA[idx]:
                 idx_color[con_AA] = idx_color.get(con_AA, 4) + 2
             for k, v in idx_color.items():
@@ -172,6 +214,59 @@ def draw_menu(stdscr):
                 box1.addch(AA_lookup[k]+2, idx+1, '■')
                 box1.attroff(curses.color_pair(v))
 
+        # consensus
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(len(AA_lookup) + 8, 8, 'Consensus:')
+        stdscr.attroff(curses.color_pair(1))
+        stdscr.attron(curses.color_pair(5))
+        stdscr.addch(len(AA_lookup) + 8, 19, '■')
+        stdscr.attroff(curses.color_pair(5))
+        # RNA
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(len(AA_lookup) + 8, 21, '| RNA:')
+        stdscr.attroff(curses.color_pair(1))
+        stdscr.attron(curses.color_pair(6))
+        stdscr.addch(len(AA_lookup) + 8, 28, '■')
+        stdscr.attroff(curses.color_pair(6))
+        # RNA + Consensus
+
+        # stdscr.attron(curses.color_pair(7))
+        # stdscr.addch(len(AA_lookup) + 8, 53, '■')
+        # stdscr.attroff(curses.color_pair(7))
+
+        # # RNA + Peptide + Consensus
+        # stdscr.attron(curses.color_pair(9))
+        # stdscr.addch(len(AA_lookup) + 8, 28, '■')
+        # stdscr.attroff(curses.color_pair(9))
+        # # Peptide
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(len(AA_lookup) + 8, 30, '| Peptide:')
+        stdscr.attroff(curses.color_pair(1))
+        stdscr.attron(curses.color_pair(10))
+        stdscr.addch(len(AA_lookup) + 8, 41, '■')
+        stdscr.attroff(curses.color_pair(10))
+        # # Peptide + Consensus
+        # stdscr.attron(curses.color_pair(11))
+        # stdscr.addch(len(AA_lookup) + 8, 32, '■')
+        # stdscr.attroff(curses.color_pair(11))
+        # # RNA + Peptide
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(len(AA_lookup) + 8, 43, '| RNA + Peptide:')
+        stdscr.attroff(curses.color_pair(1))
+        stdscr.attron(curses.color_pair(8))
+        stdscr.addch(len(AA_lookup) + 8, 60, '■')
+        stdscr.attroff(curses.color_pair(8))
+
+        # draw_sequences
+        start_y = len(AA_lookup) + 10
+        for match_list in blast_full_length.values():
+            for pep1 in match_list:
+                stdscr.addstr(start_y, 20, pep1[1]['query'])
+                start_y += 1
+                stdscr.addstr(start_y, 20, pep1[1]['mid'])
+                start_y += 1
+                stdscr.addstr(start_y, 20, pep1[1]['hit'])
+                start_y += 2
         # Turning off attributes for title
         stdscr.attroff(curses.color_pair(2))
         stdscr.attroff(curses.A_BOLD)
@@ -184,7 +279,6 @@ def draw_menu(stdscr):
 
 
 def main():
-    # pass
     curses.wrapper(draw_menu)
 
 

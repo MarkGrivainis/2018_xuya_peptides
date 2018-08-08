@@ -1,6 +1,6 @@
 from Bio import SeqIO
 from Bio import Seq
-from bamreader import ReadAligner
+from .bamreader import ReadAligner
 
 class View(ReadAligner):
     """Update the characters that will be shown on the screen"""
