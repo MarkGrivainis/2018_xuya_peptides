@@ -30,16 +30,11 @@ AA_dict = {
     'Tyrosine': ('Tyr', 'Y'),
     'Valine': ('Val', 'V'),
     'stop_codon': ('*', '*'),
-    'undetermined': ('X', 'X')
 }
 
 AA_lookup = {x[1]: idx+1 for idx, x in enumerate(AA_dict.values())}
 ORF2_START = View.ORF2_START
 fasta_input_file = './fasta/Homo_sapiens_L1.L1HS.fa'
-
-
-
-
 
 l1_seq = None
 
@@ -50,18 +45,17 @@ for fasta in fasta_sequences:
     l1_seq = Seq.translate(str(fasta.seq[View.ORF2_START:5815]))
     tst_seq = str(fasta.seq[ORF2_START:5815])
 
-bam_input_file = (
-        './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
-        'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
-        )
-reader = View(bam_input_file, 0, 200)
+
+
 
 
 def draw_menu(stdscr):
     bam_input_file = (
-        './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
-        'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+        './test_data/3e25dd86-256f-4b4a-bd54-8d8e83d47e37_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+        # './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
+        # 'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
     )
+    reader = View(bam_input_file, 0, 200)
 
     lookup_table = (
         './test_data/tables/'
@@ -211,7 +205,8 @@ def draw_menu(stdscr):
                 idx_color[con_AA] = idx_color.get(con_AA, 4) + 2
             for k, v in idx_color.items():
                 box1.attron(curses.color_pair(v))
-                box1.addch(AA_lookup[k]+2, idx+1, '■')
+                if k != 'X':
+                    box1.addch(AA_lookup[k]+2, idx+1, '■')
                 box1.attroff(curses.color_pair(v))
 
         # consensus

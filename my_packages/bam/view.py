@@ -35,7 +35,7 @@ class View(ReadAligner):
     def change_read(self, incriment):
         self.current_read += incriment
         self.current_read = max(0, self.current_read)
-        self.current_read = min(self.current_read, len(self.loaded_reads))
+        self.current_read = min(self.current_read, len(self.loaded_reads) - 1)
 
         AA_from_RNA_seq = [' ' for x in range(self.width)]
 
