@@ -5,42 +5,43 @@ import pandas as pd
 
 
 def build_peptide_dict(sequences: List[str]) -> Dict[str, str]:
-    """TODO: Docstring for build_fasta.
+    """Using a list of peptide sequences to generate a dictionary of peptides.
 
-    :sequences: TODO
-    :returns: TODO
+    :param sequences: List of peptide sequence strings
+    :returns: Dictionary where the key is 'SEQ##' where the # characters are the index of the peptide sequence
 
     """
     return {'SEQ{:0>2}'.format(i): v for i, v in enumerate(sequences)}
 
 
-def blast_fasta(query: str, reference: str =None):
-    """TODO: Docstring for blast_fasta.
+def blast_fasta(query: str, reference: str =None) -> object:
+    """The query string should match the formatting of a fasta file, this will be blasted against a reference.
 
-    :fasta: Fasta file containing peptide sequences
-    :reference: reference sequence to blast against (subject)
-    :returns: XML tree of blast output
+    :param query: string representation of the fasta file containing the peptide sequences
+    :param reference: path the reference fasta file to use. #TODO add this to a config file
+    :return: XML tree produced by blast
 
     """
     if not reference:
-        reference = '../fasta/Homo_sapiens_L1.L1HS.fa'
-    #
+        reference = './fasta/Homo_sapiens_L1.L1HS.fa'
+
     blastx_cline = NcbitblastnCommandline(
             # query=query,
             subject=reference,
             word_size=2,
             outfmt=5
             )
-    # stdout, stderr = blastx_cline()
     stdout, stderr = blastx_cline(stdin=query)
     return ET.fromstring(stdout)
 
 
-def process_blast_output(xml_tree):
-    """TODO: Docstring for process_blast_output.
+def process_blast_output(xml_tree: object) -> Dict:
+    """Process the XML tree to extract the values that need to plotted.
+        Currently this extracts the query, hit and midline sequences as well as the start coordinate
 
-    :xml_tree: TODO
-    :returns: TODO
+    :param xml_tree: XML tree returned by blast
+    :returns: A list of hits which are represented as tuples containing the start coordinate and
+                the query, midline and hit sequences
 
     """
     results = {}
@@ -84,7 +85,6 @@ def main():
             '../test_data/tables/'
             'all_ORF2_wide.txt'
             )
-
     tcga_pep_positive = pd.read_table(TCGA_PEP_TABLE)
     samples = list(tcga_pep_positive)
     print(samples)
@@ -106,7 +106,7 @@ def main():
     for id in matches:
         bam_files.append(bam_directories[sample_type] + id[0])
     print(bam_files)
-    blast_xml_tree = blast_fasta('\n'.join(['>{}\n{}'.format(k, v) for k,v in pep_dict.items()]))
+    blast_xml_tree = blast_fasta('\n'.join(['>{}\n{}'.format(k, v) for k,v in pep_dict.items()]), '../fasta/Homo_sapiens_L1.L1HS.fa')
     blast_results = process_blast_output(blast_xml_tree)
     print(blast_results)
     blast_full_length = {k: [z for z in v if len(z[1]['query']) == len(pep_dict[k])] for k, v in blast_results.items()}
