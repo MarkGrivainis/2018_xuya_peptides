@@ -141,17 +141,19 @@ AA_lookup = {x[1]: idx+1 for idx, x in enumerate(AA_dict.values())}
 # AA_from_RNA = reader.update()
 # AA_from_RNA_seq = reader.change_read(0)
 def get_paths():
-    bam_directories = {'breast': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
-                       'ovarian': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
+    # bam_directories = {'breast': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
+    #                    'ovarian': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
+    bam_directories = {'breast': '/mnt/d/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
+                       'ovarian': '/mnt/d/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
     bam_input_file = (
-        '../test_data/3e25dd86-256f-4b4a-bd54-8d8e83d47e37_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+        './test_data/3e25dd86-256f-4b4a-bd54-8d8e83d47e37_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
     )
     lookup_table = (
-        '../test_data/tables/'
+        './test_data/tables/'
         'TCGA-BRCA.UUID_Barcode.final_tumor.txt')
 
     TCGA_PEP_TABLE = (
-        '../test_data/tables/'
+        './test_data/tables/'
         'all_ORF2_wide.txt'
     )
     return bam_directories, bam_input_file, lookup_table, TCGA_PEP_TABLE
@@ -160,7 +162,7 @@ def get_paths():
 def main():
     bam_directories, bam_input_file, lookup_table, TCGA_PEP_TABLE = get_paths()
     ORF2_START = View.ORF2_START
-    fasta_input_file = '../fasta/Homo_sapiens_L1.L1HS.fa'
+    fasta_input_file = './fasta/Homo_sapiens_L1.L1HS.fa'
 
     l1_seq = None
 
@@ -170,10 +172,11 @@ def main():
         l1_seq = Seq.translate(str(fasta.seq[View.ORF2_START:View.ORF2_END]))
         tst_seq = str(fasta.seq[ORF2_START:5815])
 
-    reader = View(bam_input_file, 0, len(l1_seq))
+    reader = View(bam_input_file, 0, 200)#len(l1_seq))
 
-    reader.set_region('L1HS', 0, len(l1_seq))
+    # reader.set_region('L1HS', 0, len(l1_seq))
     AA_from_RNA = reader.update()
+
     # AA_from_RNA_seq = reader.change_read(0)
 
     # column = 0
@@ -195,7 +198,25 @@ def main():
     #     x[0] = x[0].split('.')[0] + '.Aligned.sortedByCoord.out.bam'
     #     matches.append(x)
     # print(matches)
-    # print(l1_seq)
+    print(l1_seq[:200])
+    seq = ''
+    for AA_set in AA_from_RNA:
+        seq += AA_set.pop()
+    print(seq)
+    seq = ''
+    for AA_set in AA_from_RNA:
+        if len(AA_set) > 0:
+            seq += AA_set.pop()
+        else:
+            seq += ' '
+    print(seq)
+    seq = ''
+    for AA_set in AA_from_RNA:
+        if len(AA_set) > 0:
+            seq += AA_set.pop()
+        else:
+            seq += ' '
+    print(seq)
 
 
 if __name__ == '__main__':

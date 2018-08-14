@@ -107,7 +107,6 @@ def draw_menu(stdscr):
     )
     tcga_pep_positive = pd.read_table(TCGA_PEP_TABLE)
     samples = list(tcga_pep_positive)
-    print(samples)
     sample_type, selected_sample = samples[column].split('.')
     pep_dict = pblast.build_peptide_dict(list(tcga_pep_positive['.'.join((sample_type, selected_sample))].dropna().index))
     bam_line = filter(
@@ -121,16 +120,12 @@ def draw_menu(stdscr):
     for x in bam_line:
         x[0] = x[0].split('.')[0] + '.Aligned.sortedByCoord.out.bam'
         matches.append(x)
-    print(matches)
     bam_files = []
     for id in matches:
         bam_files.append(bam_directories[sample_type] + id[0])
-    print(bam_files)
     blast_xml_tree = pblast.blast_fasta('\n'.join(['>{}\n{}'.format(k, v) for k,v in pep_dict.items()]))
     blast_results = pblast.process_blast_output(blast_xml_tree)
-    print(blast_results)
     blast_full_length = {k: [z for z in v if len(z[1]['query']) == len(pep_dict[k])] for k, v in blast_results.items()}
-    print(blast_full_length)
 
     k = 0
     offset = 0
@@ -158,7 +153,6 @@ def draw_menu(stdscr):
     curses.init_pair(9, curses.COLOR_GREEN, curses.COLOR_WHITE)
     curses.init_pair(10, curses.COLOR_BLUE, curses.COLOR_BLACK)
     curses.init_pair(11, curses.COLOR_BLUE, curses.COLOR_WHITE)
-    print(curses.COLORS)
 
     # Loop where k is the last character pressed
     while (k != ord('q')):

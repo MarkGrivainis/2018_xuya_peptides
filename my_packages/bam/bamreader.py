@@ -16,8 +16,8 @@ class ReadAligner(object):
         self.width = width
         self.set_region(
                 'L1HS',
-                self.ORF2_START + offset,
-                (width + offset)*3 + self.ORF2_START
+                offset,
+                width
                 )
 
     def set_region(self, ref, offset, width):
