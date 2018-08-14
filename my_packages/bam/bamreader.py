@@ -7,6 +7,7 @@ class ReadAligner(object):
     visualization purposes"""
 
     ORF2_START = 1987
+    ORF2_END = 5815
     __slots__ = ('offset', 'width', 'samfile', 'reads', 'ref')
 
     def __init__(self, filename, offset=0, width=100):
