@@ -7,6 +7,7 @@ class ReadAligner(object):
     visualization purposes"""
 
     ORF2_START = 1987
+    ORF2_END = 5815
     __slots__ = ('offset', 'width', 'samfile', 'reads', 'ref')
 
     def __init__(self, filename, offset=0, width=100):
@@ -15,8 +16,8 @@ class ReadAligner(object):
         self.width = width
         self.set_region(
                 'L1HS',
-                self.ORF2_START + offset,
-                (width + offset)*3 + self.ORF2_START
+                offset,
+                width
                 )
 
     def set_region(self, ref, offset, width):

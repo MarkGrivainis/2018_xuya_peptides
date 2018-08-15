@@ -1,6 +1,7 @@
 from Bio import SeqIO
 from Bio import Seq
-from .bamreader import ReadAligner
+from my_packages.bam.bamreader import ReadAligner
+# from bamreader import ReadAligner
 
 class View(ReadAligner):
     """Update the characters that will be shown on the screen"""
@@ -13,11 +14,11 @@ class View(ReadAligner):
         super().__init__(filename, offset, width)
         self.current_read = 0
         self.loaded_reads = []
+        print(self.offset)
 
     def update(self):
         AA_from_RNA = [set() for x in range(self.width)]
         self.loaded_reads = []
-
         for read in self.reads:
             if read.reference_length <= 50:
                 self.loaded_reads.append(read)
@@ -27,7 +28,6 @@ class View(ReadAligner):
                 for idx, char in enumerate(read_translated_seq):
                     if read_start + idx >= 0 and read_start + idx < len(AA_from_RNA):
                         AA_from_RNA[read_start + idx].add(char)
-
         self.loaded_reads.sort(key=lambda x: x.reference_start - x.query_alignment_start)
 
         return AA_from_RNA
@@ -58,6 +58,6 @@ class View(ReadAligner):
         self.current_read = 0
 
 if __name__ == "__main__":
-    bam_input_file = '../test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+    bam_input_file = './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
     v = View(bam_input_file, 0, 100)
-    v.update()
+    print(v.update())
