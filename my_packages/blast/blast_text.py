@@ -60,7 +60,7 @@ def process_blast_output(xml_tree: object) -> Dict:
                      {
                          'query': qseq,
                          'mid': mlin,
-                         'hit': hseq
+                         'hseq': hseq
                      }
                      ))
     return results

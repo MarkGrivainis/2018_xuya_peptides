@@ -48,7 +48,7 @@ for fasta in fasta_sequences:
 
 
 def draw_menu(stdscr):
-    column = 1
+    column = 0
     if len(sys.argv) > 1:
         column = int(sys.argv[1]) if sys.argv[1].isdigit() else column
 
@@ -57,7 +57,7 @@ def draw_menu(stdscr):
         # './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
         # 'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
     )
-    reader = View(bam_input_file, 0, 200)
+
 
     lookup_table = (
         './test_data/tables/'
@@ -87,8 +87,10 @@ def draw_menu(stdscr):
     # blast_results = pblast.process_blast_output(blast_xml_tree)
     # blast_full_length = {k: [z for z in v if len(z[1]['query']) == len(pep_dict[k])] for k, v in blast_results.items()}
 
-    bam_directories = {'breast': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
-                       'ovarian': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
+    # bam_directories = {'breast': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
+    #                    'ovarian': '/run/media/mark/Scripts/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
+    bam_directories = {'breast': '/mnt/d/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
+                       'ovarian': '/mnt/d/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
     # bam_input_file = (
     #         '../test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_'
     #         'gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
@@ -123,6 +125,7 @@ def draw_menu(stdscr):
     bam_files = []
     for id in matches:
         bam_files.append(bam_directories[sample_type] + id[0])
+    reader = View(bam_files[0], 0, 200)
     blast_xml_tree = pblast.blast_fasta('\n'.join(['>{}\n{}'.format(k, v) for k,v in pep_dict.items()]))
     blast_results = pblast.process_blast_output(blast_xml_tree)
     blast_full_length = {k: [z for z in v if len(z[1]['query']) == len(pep_dict[k])] for k, v in blast_results.items()}
@@ -200,8 +203,8 @@ def draw_menu(stdscr):
         # stdscr.addstr(56, 50, reads_list[read_idx].seq)
         # stdscr.addstr(57, 50, reads_list[read_idx].cigarstring)
 
-        statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {}".format(
-                0, 0)
+        statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {} | {}".format(
+                0, 0, bam_files[0])
 
         # Rendering the header
         whstr = "Width: {}, Height: {}".format(width, height)
@@ -301,7 +304,7 @@ def draw_menu(stdscr):
                 start_y += 1
                 stdscr.addstr(start_y, 20, pep1[1]['mid'])
                 start_y += 1
-                stdscr.addstr(start_y, 20, pep1[1]['hit'])
+                stdscr.addstr(start_y, 20, pep1[1]['hseq'])
                 start_y += 2
         # Turning off attributes for title
         stdscr.attroff(curses.color_pair(2))

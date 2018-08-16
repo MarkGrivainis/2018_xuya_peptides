@@ -42,7 +42,9 @@ class View(ReadAligner):
 
         translate_offset = (self.loaded_reads[self.current_read].reference_start - self.loaded_reads[self.current_read].query_alignment_start - self.ORF2_START)%3
         read_start = (self.loaded_reads[self.current_read].reference_start - self.loaded_reads[self.current_read].query_alignment_start - (self.ORF2_START + self.offset*3) - translate_offset)//3
-        read_translated_seq = Seq.translate('N'*translate_offset + self.loaded_reads[self.current_read].seq)
+        padded_seq = 'N'*translate_offset + self.loaded_reads[self.current_read].seq
+        padded_seq = padded_seq + 'N'*(3 - len(padded_seq)%3)
+        read_translated_seq = Seq.translate(padded_seq)
         for idx, char in enumerate(read_translated_seq):
             if read_start + idx >= 0 and read_start + idx < len(AA_from_RNA_seq):
                 AA_from_RNA_seq[read_start + idx] = char
