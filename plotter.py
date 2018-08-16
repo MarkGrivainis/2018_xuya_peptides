@@ -146,7 +146,7 @@ def get_paths():
     bam_directories = {'breast': '/mnt/d/Data/2018_Xuyu_project/BAMS/BRCA_RNAseq_Realign/',
                        'ovarian': '/mnt/d/Data/2018_Xuyu_project/BAMS/OV_RNAseq_Realign/'}
     bam_input_file = (
-        './test_data/3e25dd86-256f-4b4a-bd54-8d8e83d47e37_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
+        './test_data/71c5ab4f-ce13-432d-9a90-807ec33cf891_gdc_realn_rehead.Aligned.sortedByCoord.out.bam'
     )
     lookup_table = (
         './test_data/tables/'
@@ -198,26 +198,10 @@ def main():
     #     x[0] = x[0].split('.')[0] + '.Aligned.sortedByCoord.out.bam'
     #     matches.append(x)
     # print(matches)
-    print(l1_seq[:200])
-    seq = ''
-    for AA_set in AA_from_RNA:
-        seq += AA_set.pop()
-    print(seq)
-    seq = ''
-    for AA_set in AA_from_RNA:
-        if len(AA_set) > 0:
-            seq += AA_set.pop()
-        else:
-            seq += ' '
-    print(seq)
-    seq = ''
-    for AA_set in AA_from_RNA:
-        if len(AA_set) > 0:
-            seq += AA_set.pop()
-        else:
-            seq += ' '
-    print(seq)
-
+    l1 = l1_seq[:200]
+    print(l1)
+    for i, AA_set in enumerate(AA_from_RNA):
+        print(l1[i], AA_set, l1[i] in AA_set)
 
 if __name__ == '__main__':
     main()
